@@ -4,6 +4,8 @@ import {
   PALACE_NAJIA_RULES,
   FIVE_PHASE_RELATIONS,
 } from "./data";
+import { getCurrentDateDetails } from "./dateDetail";
+import { arrangeSixGods, HeavenlyStem } from "./sixGod";
 import {
   BranchElement,
   HexagramResult,
@@ -160,22 +162,25 @@ class HexagramAnalyzer {
   }
 
   public analyze(): { result: any } {
+    const dateDetail = getCurrentDateDetails().ganZhi;
+    let sixGod = arrangeSixGods(dateDetail.day[0] as HeavenlyStem);
+
     const najia = this.analyzeNajia();
     const palaceNajia = this.analyzePalaceNajia();
-
     const missingRelations = this.findMissingRelations(najia.liuqin);
-
     const hiddenSpirits = missingRelations.map((relation) => ({
       relation,
       positions: palaceNajia.liuqin.indexOf(relation) + 1 || 0,
     }));
 
     const hidden = matchPositions(hiddenSpirits, palaceNajia.branches);
+
     const all = [...najia.inner.branches, ...najia.outer.branches];
 
     const yiuLines: YiuLine[] = Array.from({ length: 6 }, (_, i) => {
       const hidden1 = findByPosition(hidden, i + 1);
       return {
+        sixGod: sixGod[i],
         hiddensStemBranch: hidden1
           ? createStemBranch(
               i > 2 ? palaceNajia.outer.stem : palaceNajia.inner.stem,
@@ -196,9 +201,10 @@ class HexagramAnalyzer {
     });
 
     const { self, resp } = findSelfResponse(this.hexagram.type);
-
+    console.log(yiuLines);
     return {
       result: {
+        dateDetail,
         name: this.hexagram.name,
         yiuLines,
         self,
